@@ -11,6 +11,12 @@ using Microsoft.Extensions.Configuration;
 using TheWorld.Services;
 using Microsoft.Extensions.PlatformAbstractions;
 using TheWorld.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNet.Mvc.Formatters.Xml;
+using Microsoft.AspNet.Mvc;
+using Microsoft.AspNet.Mvc.Formatters;
+using Newtonsoft.Json.Serialization;
+using TheWorld.Controllers.Api;
 
 namespace TheWorld
 {
@@ -33,23 +39,54 @@ namespace TheWorld
         // For more information on how to configure your application, visit http://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
+            services.AddMvc()
+                .AddXmlDataContractSerializerFormatters()
+                .AddJsonOptions(opt => {
+                    opt.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                });
+                
 # if DEBUG
             services.AddScoped<IMailService, DebugMailService>() ;
 #else
              //services.AddScoped<IMailService, MailService>() ;
 #endif      
+
+            services.AddLogging();
             services.AddEntityFramework()
                 .AddSqlServer()
                 .AddDbContext<WorldContext>();
+
+           // services.Configure<MvcOptions>(options =>
+           //{
+           ////options.AddXmlDataContractSerializerFormatter());
+           //     options.InputFormatters.Add(new XmlSerializerInputFormatter());
+           //     options.OutputFormatters.Add(new XmlSerializerOutputFormatter());
+                
+           //});
             
+
+            services.AddTransient<WorldContextSeedData>() ;
+
+            services.AddScoped<IWorldRepository, WorldRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app)
-        { 
+        public void Configure(IApplicationBuilder app, WorldContextSeedData seeder, ILoggerFactory loggerFactory )
+            
+        {
+
+            loggerFactory.AddDebug(LogLevel.Warning);
+
+
             //app.UseDefaultFiles();
             app.UseStaticFiles();
+
+            AutoMapper.Mapper.Initialize(config =>
+            {
+                config.CreateMap<Trip, TripViewModel>().ReverseMap();
+            });
+
+
             app.UseMvc( config =>
             {
                 config.MapRoute(name: "Default",
@@ -57,7 +94,7 @@ namespace TheWorld
                     defaults: new { controller = "App", action = "Index" });
 
             });
-
+            seeder.EnsureSeedData();
 
             
 

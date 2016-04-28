@@ -12,18 +12,18 @@ namespace TheWorld.Controllers.Web
     public class AppController:Controller
     {
         private IMailService _mailService;
-        private WorldContext _context;
+        private IWorldRepository _repository;
 
-        public AppController(IMailService Service, WorldContext context)
+        public AppController(IMailService Service, IWorldRepository context)
         {
             _mailService = Service;
-            _context = context;
+            _repository = context;
 
         }
         public IActionResult Index()
         {
-            var trips = _context.Trips.OrderBy(t=>t.Name).ToList();
-            return View();
+            var trips = _repository.GetAllTrips();
+            return View(trips);
         }
 
         public IActionResult About()
