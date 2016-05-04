@@ -16,6 +16,7 @@ namespace TheWorld.Controllers.Api
 
         public DateTime Created { get; set; } = DateTime.UtcNow;
 
+        public IEnumerable<StopViewModel> Stops { get; set; }
 
     }
 }
