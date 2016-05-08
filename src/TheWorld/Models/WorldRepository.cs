@@ -1,14 +1,13 @@
-﻿using Microsoft.Data.Entity;
-using Microsoft.Extensions.Logging;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Data.Entity;
+using Microsoft.Extensions.Logging;
 
 namespace TheWorld.Models
 {
-    public class WorldRepository:IWorldRepository
+    public class WorldRepository : IWorldRepository
     {
         private WorldContext _context;
         private ILogger<WorldRepository> _logger;
@@ -19,18 +18,26 @@ namespace TheWorld.Models
             _logger = logger;
         }
 
+<<<<<<< HEAD
 
         public void AddStop(string tripName,Stop newStop)
         {
             var theTrip = GetTripByName(tripName);
             newStop.Order = theTrip.Stops.Max(s => s.Order) + 1;
+=======
+        public void AddStop(string tripName,string userName, Stop newStop)
+        {
+            var theTrip = GetTripByName(tripName, userName);
+            newStop.Order = theTrip.Stops.Max(s => s.Order) + 1;
+            theTrip.Stops.Add(newStop);
+            theTrip.Stops.Add(newStop);
+>>>>>>> 036c636763d4c51ac646a581213af65261fc34b3
             _context.Stops.Add(newStop);
         }
 
         public void AddTrip(Trip newTrip)
         {
             _context.Add(newTrip);
-
         }
 
         public IEnumerable<Trip> GetAllTrips()
@@ -43,11 +50,8 @@ namespace TheWorld.Models
             {
                 _logger.LogError("Could not get trips from database", ex);
                 return null;
-               
             }
-            
         }
-
 
         public IEnumerable<Trip> GetAllTripsWithStops()
         {
@@ -58,13 +62,35 @@ namespace TheWorld.Models
                 .OrderBy(t => t.Name)
                 .ToList();
             }
-            catch (Exception ex )
+            catch (Exception ex)
             {
-
                 _logger.LogError("Could not get trips with stops from database", ex);
                 return null;
             }
+        }
 
+        public Trip GetTripByName(string tripName, string userName)
+        {
+            return _context.Trips.Include(t => t.Stops)
+                                 .Where(t => t.Name == tripName && t.UserName==userName)
+                                 .FirstOrDefault();
+        }
+
+        public IEnumerable<Trip> GetUserTripsWithStops(string name)
+        {
+            try
+            {
+                return _context.Trips
+                .Include(t => t.Stops)
+                .OrderBy(t => t.Name)
+                .Where(t=>t.UserName==name)
+                .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Could not get trips with stops from database", ex);
+                return null;
+            }
         }
 
         public Trip GetTripByName(string tripName)
