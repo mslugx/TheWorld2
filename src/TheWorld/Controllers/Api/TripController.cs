@@ -25,7 +25,7 @@ namespace TheWorld.Controllers.Api
         [HttpGet("")]
         public JsonResult Get()
         {
-            return Json(AutoMapper.Mapper.Map<IEnumerable<TripViewModel>>(_repository.GetAllTripsWithStops()));
+            return Json(AutoMapper.Mapper.Map<IEnumerable<StopViewModel>>(_repository.GetAllTripsWithStops()));
         }
 
         [HttpPost("")]

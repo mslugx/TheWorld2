@@ -7,11 +7,12 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using TheWorld.Models;
+using AutoMapper;
 
 namespace TheWorld.Controllers.Api
 {
     [Route("api/trips/{TripName}/stops")]
-    public class StopController:Controller
+    public class StopController : Controller
     {
         private ILogger<StopController> _logger;
         private IWorldRepository _repository;
@@ -28,7 +29,15 @@ namespace TheWorld.Controllers.Api
             try
             {
                 var results = _repository.GetTripByName(tripName);
-                return Json(true);
+
+                if (results == null)
+                {
+                    return Json(null);
+                }
+
+
+
+                return Json(AutoMapper.Mapper.Map<IEnumerable<StopViewModel>>(results.Stops.OrderBy(s => s.Order)));
             }
             catch (Exception ex)
             {
@@ -36,7 +45,47 @@ namespace TheWorld.Controllers.Api
                 _logger.LogError("Can not get stops for this trip", ex);
                 Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return Json("Error occurred");
-            }            
+            }
+        }
+
+
+        public JsonResult Post(string tripName, [FromBody] StopViewModel vm)
+        {
+
+            try
+            {
+
+                if (ModelState.IsValid)
+                {
+                    // map to the enitty
+                    var newStop = Mapper.Map <Stop>(vm);
+
+
+                    // looking up geocoordinates
+                    
+
+                    //save to the database
+
+                    _repository.AddStop(tripName,newStop);
+
+                    if (_repository.SaveAll())
+                    {
+                        Response.StatusCode = (int)HttpStatusCode.Created;
+                        return Json(Mapper.Map<StopViewModel>(newStop));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                _logger.LogError("Failed to save new stop", ex);
+                Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return Json("Failed to save new stop");
+            }
+
+            Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            return Json("Validation failed on new stop");
+
         }
     }
 }
