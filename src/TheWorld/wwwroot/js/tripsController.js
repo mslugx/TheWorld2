@@ -29,10 +29,25 @@
 
 
         vm.addTrip = function () {
-            vm.trips.push({ name: vm.newTrip.name, created: new Date() });
-            //vm.newTrip.name = "";
+            //vm.trips.push({ name: vm.newTrip.name, created: new Date() });
+            ////vm.newTrip.name = "";
 
-            vm.newTrip = {};
+            //vm.newTrip = {};
+
+            vm.isBusy = true;
+
+            vm.errorMessage = "";
+
+            $http.post("/api/trips", vm.newTrip)
+                .then(function (response) {
+                    vm.trips.push(response.data);
+                    vm.newTrip = {};
+                }, function () {
+                    vm.errorMessage = "failed to save new trips.";
+                })
+                .finally(function () {
+                    vm.isBusy = false;
+                });
         };
     }
 })();
